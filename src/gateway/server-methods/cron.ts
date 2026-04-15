@@ -135,7 +135,9 @@ export const cronHandlers: GatewayRequestHandlers = {
       return;
     }
     // CLI has no scopes concept → treat as admin. PI agents pass their actual scopes.
-    const rawScopes = (client?.connect?.scopes as OperatorScope[] | undefined) ?? [];
+    const rawScopes = Array.isArray(client?.connect?.scopes)
+      ? (client.connect.scopes as OperatorScope[])
+      : [];
     const scopes = rawScopes.length > 0 ? rawScopes : [ADMIN_SCOPE];
     const job = await context.cron.add(jobCreate, scopes);
     context.logGateway.info("cron: job created", { jobId: job.id, schedule: jobCreate.schedule });
