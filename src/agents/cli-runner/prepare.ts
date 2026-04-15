@@ -144,6 +144,9 @@ export async function prepareCliRunContext(
           OPENCLAW_MCP_SESSION_KEY: params.sessionKey ?? "",
           OPENCLAW_MCP_MESSAGE_CHANNEL: params.messageProvider ?? "",
           OPENCLAW_MCP_SENDER_IS_OWNER: params.senderIsOwner === true ? "true" : "false",
+          ...(params.operatorScopes
+            ? { OPENCLAW_MCP_OPERATOR_SCOPES: JSON.stringify(params.operatorScopes) }
+            : {}),
         }
       : undefined,
     warn: (message) => cliBackendLog.warn(message),

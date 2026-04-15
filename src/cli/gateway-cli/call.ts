@@ -1,5 +1,6 @@
 import type { Command } from "commander";
 import type { OpenClawConfig } from "../../config/types.openclaw.js";
+import type { OperatorScope } from "../../gateway/method-scopes.js";
 import { callGateway } from "../../gateway/call.js";
 import { GATEWAY_CLIENT_MODES, GATEWAY_CLIENT_NAMES } from "../../gateway/protocol/client-info.js";
 import { withProgress } from "../progress.js";
@@ -30,8 +31,13 @@ export const callGatewayCli = async (method: string, opts: GatewayRpcOpts, param
       indeterminate: true,
       enabled: opts.json !== true,
     },
-    async () =>
-      await callGateway({
+    async () => {
+      // Read operatorScopes from env (set by runCliAgent via prepare.ts) to enforce scope ceiling.
+      const envScopes = process.env.OPENCLAW_MCP_OPERATOR_SCOPES;
+      const scopes: OperatorScope[] | undefined = envScopes
+        ? (JSON.parse(envScopes) as OperatorScope[])
+        : undefined;
+      return await callGateway({
         config: opts.config,
         url: opts.url,
         token: opts.token,
@@ -42,5 +48,7 @@ export const callGatewayCli = async (method: string, opts: GatewayRpcOpts, param
         timeoutMs: Number(opts.timeout ?? 10_000),
         clientName: GATEWAY_CLIENT_NAMES.CLI,
         mode: GATEWAY_CLIENT_MODES.CLI,
-      }),
+        scopes,
+      });
+    },
   );
