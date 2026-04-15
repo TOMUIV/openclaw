@@ -553,17 +553,17 @@ export async function runEmbeddedAttempt(
           });
           // Apply scope ceiling: remove tools that require higher privilege than the caller holds.
           // This runs before toolsAllow so that disallowed scopes cannot be bypassed via toolsAllow.
-          if (params.operatorScopes && params.operatorScopes.length > 0) {
+          if (Array.isArray(params.operatorScopes) && params.operatorScopes.length > 0) {
             const scopes = [...params.operatorScopes];
             allTools = allTools.filter((tool) => {
               // Map tool name to its corresponding gateway method name.
-              // Tool names use underscores; gateway methods use dots (e.g. config_patch → config.patch).
+              // Tool names use underscores; gateway methods use dots (e.g. config_patch â?config.patch).
               const methodName = tool.name.replace(/_/g, ".");
               const auth = authorizeOperatorScopesForMethod(methodName, scopes);
               return auth.allowed;
             });
           }
-          if (params.toolsAllow && params.toolsAllow.length > 0) {
+          if (Array.isArray(params.toolsAllow) && params.toolsAllow.length > 0) {
             const allowSet = new Set(params.toolsAllow);
             return allTools.filter((tool) => allowSet.has(tool.name));
           }
@@ -1173,8 +1173,7 @@ export async function runEmbeddedAttempt(
 
       // Mistral (and other strict providers) reject tool call IDs that don't match their
       // format requirements (e.g. [a-zA-Z0-9]{9}). sanitizeSessionHistory only processes
-      // historical messages at attempt start, but the agent loop's internal tool call →
-      // tool result cycles bypass that path. Wrap streamFn so every outbound request
+      // historical messages at attempt start, but the agent loop's internal tool call â?      // tool result cycles bypass that path. Wrap streamFn so every outbound request
       // sees sanitized tool call IDs.
       const isOpenAIResponsesApi =
         params.model.api === "openai-responses" ||
@@ -2042,12 +2041,12 @@ export async function runEmbeddedAttempt(
           // Flush buffered block replies before waiting for compaction so the
           // user receives the assistant response immediately.  Without this,
           // coalesced/buffered blocks stay in the pipeline until compaction
-          // finishes — which can take minutes on large contexts (#35074).
+          // finishes â?which can take minutes on large contexts (#35074).
           if (params.onBlockReplyFlush) {
             await params.onBlockReplyFlush();
           }
 
-          // Skip compaction wait when yield aborted the run — the signal is
+          // Skip compaction wait when yield aborted the run â?the signal is
           // already tripped and abortable() would immediately reject.
           const compactionRetryWait = yieldAborted
             ? { timedOut: false }
@@ -2089,11 +2088,11 @@ export async function runEmbeddedAttempt(
         const compactionOccurredThisAttempt = getCompactionCount() > 0;
         // Append cache-TTL timestamp AFTER prompt + compaction retry completes.
         // Previously this was before the prompt, which caused a custom entry to be
-        // inserted between compaction and the next prompt — breaking the
+        // inserted between compaction and the next prompt â?breaking the
         // prepareCompaction() guard that checks the last entry type, leading to
         // double-compaction. See: https://github.com/openclaw/openclaw/issues/9282
-        // Skip when timed out during compaction — session state may be inconsistent.
-        // Also skip when compaction ran this attempt — appending a custom entry
+        // Skip when timed out during compaction â?session state may be inconsistent.
+        // Also skip when compaction ran this attempt â?appending a custom entry
         // after compaction would break the guard again. See: #28491
         appendAttemptCacheTtlIfNeeded({
           sessionManager,
